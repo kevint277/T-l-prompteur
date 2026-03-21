@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Téléprompteur professionnel pour lecture de nouvelles en studio" />
+  <title>TéléPrompter Studio</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════
+       VUE SETUP — Écran de configuration et saisie
+  ═══════════════════════════════════════════════════ -->
+  <div id="view-setup" class="view active" role="main">
+
+    <!-- En-tête application -->
+    <header class="app-header" role="banner">
+      <div class="app-header__logo">
+        <span class="logo-dot"></span>
+        <span class="logo-text">TÉLÉPROMPTEUR</span>
+        <span class="logo-sub">STUDIO</span>
+      </div>
+      <div class="app-header__status" id="session-status" aria-live="polite"></div>
+    </header>
+
+    <!-- Corps principal en deux colonnes -->
+    <div class="setup-body">
+
+      <!-- ── Colonne gauche : Éditeur de texte ── -->
+      <section class="setup-col setup-col--editor" aria-labelledby="editor-heading">
+        <h2 id="editor-heading" class="col-heading">
+          <span class="col-heading__icon">✍</span>
+          Script de lecture
+        </h2>
+
+        <div class="editor-toolbar">
+          <button class="btn btn--ghost btn--sm" id="btn-clear" title="Effacer le texte" aria-label="Effacer le script">
+            Effacer
+          </button>
+          <button class="btn btn--ghost btn--sm" id="btn-sample" title="Charger un texte exemple" aria-label="Charger un exemple">
+            Exemple
+          </button>
+          <span class="editor-char-count" id="char-count" aria-live="polite">0 mots</span>
+        </div>
+
+        <textarea
+          id="script-input"
+          class="script-textarea"
+          placeholder="Collez ou écrivez votre script ici…"
+          spellcheck="true"
+          autocorrect="on"
+          aria-label="Zone de saisie du script"
+          aria-required="true"
+        ></textarea>
+
+        <!-- Bouton principal de lancement -->
+        <button class="btn btn--start" id="btn-start" aria-label="Lancer la lecture du téléprompteur">
+          <span class="btn-start__icon">▶</span>
+          Lancer la lecture
+        </button>
+      </section>
+
+      <!-- ── Colonne droite : Panneau de réglages ── -->
+      <aside class="setup-col setup-col--settings" aria-labelledby="settings-heading">
+        <h2 id="settings-heading" class="col-heading">
+          <span class="col-heading__icon">⚙</span>
+          Réglages
+        </h2>
+
+        <!-- Groupe : Défilement -->
+        <fieldset class="settings-group">
+          <legend class="settings-group__legend">Défilement</legend>
+
+          <div class="control-row">
+            <label class="control-label" for="speed-slider">
+              Vitesse
+              <span class="control-value" id="speed-display">60 px/s</span>
+            </label>
+            <input
+              type="range"
+              id="speed-slider"
+              class="range-input"
+              min="10"
+              max="300"
+              step="5"
+              value="60"
+              aria-label="Vitesse de défilement en pixels par seconde"
+              aria-valuemin="10"
+              aria-valuemax="300"
+            />
+            <div class="range-labels">
+              <span>Lent</span><span>Rapide</span>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Groupe : Typographie -->
+        <fieldset class="settings-group">
+          <legend class="settings-group__legend">Typographie</legend>
+
+          <div class="control-row">
+            <label class="control-label" for="fontsize-slider">
+              Taille du texte
+              <span class="control-value" id="fontsize-display">52 px</span>
+            </label>
+            <input
+              type="range"
+              id="fontsize-slider"
+              class="range-input"
+              min="20"
+              max="120"
+              step="2"
+              value="52"
+              aria-label="Taille de la police en pixels"
+            />
+            <div class="range-labels">
+              <span>Petit</span><span>Grand</span>
+            </div>
+          </div>
+
+          <div class="control-row">
+            <label class="control-label" for="lineheight-slider">
+              Interligne
+              <span class="control-value" id="lineheight-display">1.6</span>
+            </label>
+            <input
+              type="range"
+              id="lineheight-slider"
+              class="range-input"
+              min="1.0"
+              max="3.0"
+              step="0.1"
+              value="1.6"
+              aria-label="Hauteur de ligne"
+            />
+            <div class="range-labels">
+              <span>Serré</span><span>Aéré</span>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Groupe : Mise en page -->
+        <fieldset class="settings-group">
+          <legend class="settings-group__legend">Mise en page</legend>
+
+          <div class="control-row">
+            <label class="control-label" for="align-select">Alignement du texte</label>
+            <div class="btn-group" role="group" aria-label="Alignement du texte">
+              <button class="btn-group__btn active" data-align="left"   aria-pressed="false" title="Aligné à gauche">⬅ Gauche</button>
+              <button class="btn-group__btn"        data-align="center" aria-pressed="true"  title="Centré">☰ Centré</button>
+              <button class="btn-group__btn"        data-align="justify" aria-pressed="false" title="Justifié">≡ Justifié</button>
+            </div>
+          </div>
+
+          <div class="control-row">
+            <label class="control-label" for="width-slider">
+              Largeur colonne
+              <span class="control-value" id="width-display">80 %</span>
+            </label>
+            <input
+              type="range"
+              id="width-slider"
+              class="range-input"
+              min="40"
+              max="100"
+              step="5"
+              value="80"
+              aria-label="Largeur de la colonne de lecture en pourcentage"
+            />
+            <div class="range-labels">
+              <span>Étroit</span><span>Large</span>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Groupe : Effets miroir -->
+        <fieldset class="settings-group">
+          <legend class="settings-group__legend">Effets miroir</legend>
+
+          <div class="toggle-row">
+            <label class="toggle-label" for="mirror-h">
+              <span>Miroir horizontal</span>
+              <span class="toggle-hint">Pour vitre réfléchissante</span>
+            </label>
+            <button
+              class="toggle-btn"
+              id="mirror-h"
+              role="switch"
+              aria-checked="false"
+              aria-label="Activer le miroir horizontal"
+            >
+              <span class="toggle-btn__track">
+                <span class="toggle-btn__thumb"></span>
+              </span>
+            </button>
+          </div>
+
+          <div class="toggle-row">
+            <label class="toggle-label" for="mirror-v">
+              <span>Miroir vertical</span>
+              <span class="toggle-hint">Optionnel</span>
+            </label>
+            <button
+              class="toggle-btn"
+              id="mirror-v"
+              role="switch"
+              aria-checked="false"
+              aria-label="Activer le miroir vertical"
+            >
+              <span class="toggle-btn__track">
+                <span class="toggle-btn__thumb"></span>
+              </span>
+            </button>
+          </div>
+        </fieldset>
+
+        <!-- Groupe : Raccourcis clavier -->
+        <div class="shortcuts-panel" aria-label="Raccourcis clavier">
+          <h3 class="shortcuts-panel__title">Raccourcis clavier</h3>
+          <ul class="shortcuts-list" role="list">
+            <li><kbd>Espace</kbd> Lecture / Pause</li>
+            <li><kbd>↑</kbd> Vitesse +</li>
+            <li><kbd>↓</kbd> Vitesse −</li>
+            <li><kbd>+</kbd> Police +</li>
+            <li><kbd>−</kbd> Police −</li>
+            <li><kbd>F</kbd> Plein écran</li>
+            <li><kbd>R</kbd> Retour au début</li>
+            <li><kbd>Échap</kbd> Quitter la lecture</li>
+          </ul>
+        </div>
+
+      </aside>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       VUE LECTURE — Écran de téléprompteur
+  ═══════════════════════════════════════════════════ -->
+  <div id="view-read" class="view" role="main" aria-hidden="true">
+
+    <!-- Masque de fondu en haut (zone de lecture) -->
+    <div class="read-mask read-mask--top" aria-hidden="true"></div>
+
+    <!-- Ligne de lecture centrale -->
+    <div class="read-guide" aria-hidden="true" title="Ligne de lecture"></div>
+
+    <!-- Conteneur du texte qui défile -->
+    <div id="prompter-container" class="prompter-container" aria-live="off" aria-label="Texte en lecture">
+      <div id="prompter-content" class="prompter-content">
+        <!-- Le texte est injecté ici par JavaScript -->
+      </div>
+      <!-- Paddding de fin pour que le texte remonte complètement -->
+      <div class="prompter-end-pad" aria-hidden="true"></div>
+    </div>
+
+    <!-- Masque de fondu en bas -->
+    <div class="read-mask read-mask--bottom" aria-hidden="true"></div>
+
+    <!-- Barre de contrôles de lecture (overlay) -->
+    <div id="read-controls" class="read-controls" role="toolbar" aria-label="Contrôles de lecture">
+
+      <div class="read-controls__left">
+        <button class="read-btn read-btn--stop" id="btn-stop" title="Arrêter et revenir au début" aria-label="Arrêter la lecture">
+          <span aria-hidden="true">■</span>
+          <span class="read-btn__label">Arrêter</span>
+        </button>
+      </div>
+
+      <div class="read-controls__center">
+        <button class="read-btn read-btn--play" id="btn-play-pause" title="Lecture / Pause (Espace)" aria-label="Lecture / Pause">
+          <span class="play-icon" aria-hidden="true">▶</span>
+          <span class="pause-icon" aria-hidden="true">⏸</span>
+          <span class="read-btn__label" id="play-pause-label">Lecture</span>
+        </button>
+      </div>
+
+      <div class="read-controls__right">
+        <!-- Contrôle vitesse inline -->
+        <div class="inline-control">
+          <span class="inline-control__label">Vitesse</span>
+          <button class="icon-btn" id="btn-speed-down" aria-label="Diminuer la vitesse" title="Vitesse − (↓)">−</button>
+          <span class="inline-control__val" id="read-speed-display">60</span>
+          <button class="icon-btn" id="btn-speed-up" aria-label="Augmenter la vitesse" title="Vitesse + (↑)">+</button>
+        </div>
+
+        <!-- Contrôle taille de police inline -->
+        <div class="inline-control">
+          <span class="inline-control__label">Police</span>
+          <button class="icon-btn" id="btn-font-down" aria-label="Diminuer la taille du texte" title="Police − (−)">A−</button>
+          <span class="inline-control__val" id="read-font-display">52</span>
+          <button class="icon-btn" id="btn-font-up" aria-label="Augmenter la taille du texte" title="Police + (+)">A+</button>
+        </div>
+
+        <!-- Plein écran -->
+        <button class="icon-btn icon-btn--wide" id="btn-fullscreen" aria-label="Basculer le plein écran" title="Plein écran (F)">
+          <span class="fullscreen-enter" aria-hidden="true">⛶</span>
+          <span class="fullscreen-exit" aria-hidden="true" style="display:none">✕</span>
+          <span class="read-btn__label">Plein écran</span>
+        </button>
+
+        <!-- Masquer contrôles -->
+        <button class="icon-btn icon-btn--wide" id="btn-hide-controls" aria-label="Masquer les contrôles" title="Masquer les contrôles">
+          <span aria-hidden="true">👁</span>
+          <span class="read-btn__label">Masquer</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Indicateur de progression -->
+    <div class="progress-bar" aria-hidden="true">
+      <div class="progress-bar__fill" id="progress-fill"></div>
+    </div>
+
+    <!-- Minuterie -->
+    <div class="read-timer" id="read-timer" aria-live="off" aria-label="Durée de lecture">00:00</div>
+
+  </div>
+
+
+  <!-- Script principal -->
+  <script src="script.js"></script>
+</body>
+</html>
