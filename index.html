@@ -410,44 +410,33 @@ button { cursor: pointer; border: none; background: none; }
   flex: 1;
   min-height: 0;
   position: relative;
-  border-radius: 20px;
+  border-radius: 8px;
   overflow: hidden;
-  background: radial-gradient(ellipse at center, #0d1a2e 0%, #070b14 55%, #030508 100%);
-  border: 1px solid rgba(255,255,255,0.062);
-  box-shadow: var(--shadow), inset 0 0 80px rgba(0,0,0,0.32);
+  /* Noir pur — style téléprompteur professionnel */
+  background: #000;
+  border: 2px solid #222;
+  box-shadow: 0 0 0 1px #111, var(--shadow);
 }
 
-/* Gradient masks */
+/* Gradient masks — noir pur pour fondu propre */
 .safe-mask {
   position: absolute;
   left: 0; right: 0;
-  height: 22%;
+  height: 18%;
   pointer-events: none;
   z-index: 5;
 }
 
-.safe-mask.top {
-  top: 0;
-  background: linear-gradient(180deg, rgba(5,8,15,0.98) 0%, transparent 100%);
-}
+.safe-mask.top    { top: 0;    background: linear-gradient(180deg, #000 0%, transparent 100%); }
+.safe-mask.bottom { bottom: 0; background: linear-gradient(0deg,   #000 0%, transparent 100%); }
 
-.safe-mask.bottom {
-  bottom: 0;
-  background: linear-gradient(0deg, rgba(5,8,15,0.98) 0%, transparent 100%);
-}
-
-/* Reading guide */
+/* Ligne de lecture — sobre, pro */
 .reading-guide {
   position: absolute;
-  top: 40%;
-  left: 5%; right: 5%;
-  height: 2px;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(77,163,255,0.16) 20%,
-    rgba(77,163,255,0.16) 80%,
-    transparent 100%
-  );
+  top: 38%;
+  left: 4%; right: 4%;
+  height: 1px;
+  background: rgba(255,255,255,0.12);
   pointer-events: none;
   z-index: 6;
 }
@@ -479,16 +468,17 @@ button { cursor: pointer; border: none; background: none; }
 }
 
 #promptText {
-  color: #f0f4ff;
+  /* Style téléprompteur professionnel — blanc pur sur noir */
+  color: #ffffff;
+  font-family: Arial, Helvetica, sans-serif;
   font-weight: 700;
-  letter-spacing: 0.008em;
-  /* Coupure propre avec trait d'union automatique (lang="fr" requis sur <html>) */
+  letter-spacing: 0.02em;
   overflow-wrap: break-word;
   word-break: normal;
   hyphens: auto;
   -webkit-hyphens: auto;
   -moz-hyphens: auto;
-  text-shadow: 0 2px 22px rgba(0,0,0,0.48);
+  /* Pas d'ombre — contraste maximal */
 }
 
 #promptText p { margin-bottom: 1.45em; }
@@ -839,9 +829,9 @@ body.is-fullscreen #fsExitBtn {
         </label>
 
         <div class="slider-row" id="boostRow" style="margin-top:0.42rem;">
-          <span class="slider-lbl">Accélération</span>
-          <input id="boostRange" type="range" min="5" max="60" step="5" value="20" aria-label="Pourcentage d'accélération">
-          <span class="slider-val" id="boostValue">+20%</span>
+          <span class="slider-lbl">Multiplicateur</span>
+          <input id="boostRange" type="range" min="15" max="50" step="5" value="20" aria-label="Multiplicateur d'accélération">
+          <span class="slider-val" id="boostValue">×2.0</span>
         </div>
 
         <label class="check-row" style="margin-top:0.3rem;">
@@ -938,7 +928,7 @@ body.is-fullscreen #fsExitBtn {
             <!-- Boost controls -->
             <div class="qm-speed-block" title="Accélération appui long">
               <button class="qm-btn qm-btn-boost-down" id="qmBoostDown" type="button" title="Accélération −">⚡−</button>
-              <span class="qm-speed-val" id="qmBoostVal">+20%</span>
+              <span class="qm-speed-val" id="qmBoostVal">×2.0</span>
               <button class="qm-btn qm-btn-boost-up"   id="qmBoostUp"   type="button" title="Accélération +">⚡+</button>
             </div>
 
@@ -1007,7 +997,7 @@ const state = {
 
   // Réglages tactiles
   boostEnabled:   true,
-  boostPercent:   20,       // %
+  boostPercent:   20,       // Valeur slider (15-50) → divisée par 10 = multiplicateur (1.5×-5.0×)
   doubleTapEnabled: true,
   autoCloseSec:   4,        // 0 = manuel
 
@@ -1186,7 +1176,7 @@ function syncUI() {
 
   // Sliders tactile
   D.boostRange.value       = state.boostPercent;
-  D.boostValue.textContent = '+' + state.boostPercent + '%';
+  D.boostValue.textContent = boostLabel(state.boostPercent);
 
   D.autoCloseRange.value       = state.autoCloseSec;
   D.autoCloseValue.textContent = state.autoCloseSec === 0 ? 'Manuel' : state.autoCloseSec + ' s';
@@ -1199,7 +1189,7 @@ function syncUI() {
 
   // Quick menu speed & boost display
   D.qmSpeedVal.textContent = state.speed + ' px/s';
-  D.qmBoostVal.textContent = '+' + state.boostPercent + '%';
+  D.qmBoostVal.textContent = boostLabel(state.boostPercent);
 }
 
 /* ═══ APPLICATION DES STYLES DE LECTURE ═════════════════════ */
@@ -1268,7 +1258,8 @@ function updateProgress() {
 /* ═══ VITESSE EFFECTIVE (avec boost) ════════════════════════ */
 function getEffectiveSpeed() {
   if (state.isBoosting && state.boostEnabled) {
-    return state.speed * (1 + state.boostPercent / 100);
+    // boostPercent 15-50 → multiplicateur 1.5×-5.0×
+    return state.speed * (state.boostPercent / 10);
   }
   return state.speed;
 }
@@ -1381,11 +1372,13 @@ function changeSpeed(delta) {
   debounceSave();
 }
 
+function boostLabel(v) { return '×' + (v / 10).toFixed(1); }
+
 function changeBoost(delta) {
-  state.boostPercent = clamp(state.boostPercent + delta, 5, 60);
+  state.boostPercent = clamp(state.boostPercent + delta, 15, 50);
   D.boostRange.value       = state.boostPercent;
-  D.boostValue.textContent = '+' + state.boostPercent + '%';
-  D.qmBoostVal.textContent = '+' + state.boostPercent + '%';
+  D.boostValue.textContent = boostLabel(state.boostPercent);
+  D.qmBoostVal.textContent = boostLabel(state.boostPercent);
   debounceSave();
 }
 
@@ -1711,8 +1704,8 @@ function bindEvents() {
 
   D.boostRange.addEventListener('input', () => {
     state.boostPercent           = +D.boostRange.value;
-    D.boostValue.textContent     = '+' + state.boostPercent + '%';
-    D.qmBoostVal.textContent     = '+' + state.boostPercent + '%';
+    D.boostValue.textContent     = boostLabel(state.boostPercent);
+    D.qmBoostVal.textContent     = boostLabel(state.boostPercent);
     debounceSave();
   });
 
